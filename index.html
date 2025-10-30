@@ -1,816 +1,425 @@
 
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>短語練習小幫手</title>
+    <title>成語填空挑戰</title>
+    <!-- 載入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+        /* 設定字體為 Inter，但主要中文字體使用系統預設，確保顯示效果 */
+        :root {
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
         }
-        /* 避免 Tailwind CSS 預設樣式影響 */
-        [hidden] {
-            display: none !important;
+        /* 自定義按鈕樣式 */
+        .option-button {
+            transition: all 0.15s ease-in-out;
+        }
+        .option-button:hover:not(.disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+        /* 替換成語的方框樣式 */
+        .idiom-box {
+            display: inline-block;
+            width: 1.5rem; /* 方框寬度 */
+            height: 1.5rem; /* 方框高度 */
+            border: 2px solid #ef4444; /* 紅色邊框 */
+            margin: 0 0.1rem;
+            text-align: center;
+            line-height: 1.5rem;
+            font-weight: bold;
+            color: #ef4444;
+            background-color: #fee2e2; /* 淺紅色背景 */
+            border-radius: 4px;
+        }
+        /* 成功填入的成語樣式 */
+        .idiom-filled {
+            color: #10b981; /* 綠色文字 */
+            font-weight: bold;
+            margin: 0 0.25rem;
         }
     </style>
 </head>
-<body class="bg-blue-50 flex items-center justify-center min-h-screen p-4">
+<body class="bg-gray-50 min-h-screen p-4 sm:p-8">
 
-    <div class="w-full max-w-3xl bg-white rounded-2xl shadow-xl p-6 md:p-8">
-        
-        <!-- 1. 設定畫面 -->
-        <div id="setup-screen">
-            <h1 class="text-3xl font-bold text-blue-800 mb-6 text-center">短語練習小幫手</h1>
-            
-            <div class="space-y-4">
-                <div>
-                    <label for="lesson-select" class="block text-sm font-medium text-gray-700 mb-1">選擇課文</label>
-                    <select id="lesson-select" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                        <option value="">請選擇一課...</option>
-                    </select>
-                </div>
+    <div id="app" class="max-w-4xl mx-auto bg-white shadow-2xl rounded-xl p-6 md:p-10 border-t-8 border-red-500">
+        <h1 class="text-3xl font-extrabold text-gray-800 mb-6 text-center">📚 成語填空挑戰 📚</h1>
 
-                <div>
-                    <label for="phrase-select" class="block text-sm font-medium text-gray-700 mb-1">選擇短語</label>
-                    <select id="phrase-select" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" disabled>
-                        <option value="">請先選擇課文...</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label for="count-select" class="block text-sm font-medium text-gray-700 mb-1">練習題數</label>
-                    <select id="count-select" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                        <option value="2">2 題</option>
-                        <option value="3">3 題</option>
-                        <option value="4">4 題</option>
-                        <option value="5">5 題</option>
-                    </select>
-                </div>
+        <!-- 步驟 1: 選擇課別 -->
+        <div id="lesson-selection" class="space-y-4">
+            <h2 class="text-xl font-semibold text-red-600 mb-3 border-b pb-2">步驟一：選擇挑戰課別</h2>
+            <div id="lesson-buttons" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <!-- Lesson buttons will be injected here -->
             </div>
-
-            <button id="start-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition duration-200 mt-8 text-lg" disabled>
-                開始練習
-            </button>
         </div>
 
-        <!-- 2. 練習畫面 -->
-        <div id="practice-screen" hidden>
-            <div class="flex justify-between items-center mb-4">
-                <h2 id="phrase-title" class="text-2xl font-bold text-blue-800"></h2>
-                <div id="question-counter" class="text-lg font-medium text-gray-600"></div>
-            </div>
-
-            <!-- 結構顯示 -->
-            <div class="mb-4">
-                <p class="text-sm font-medium text-gray-500">短語結構</p>
-                <div id="phrase-structure" class="bg-gray-100 p-4 rounded-lg text-lg md:text-xl font-medium text-gray-800"></div>
+        <!-- 步驟 2: 挑戰介面 (預設隱藏) -->
+        <div id="challenge-area" class="mt-8 hidden space-y-6">
+            <h2 class="text-xl font-semibold text-red-600 mb-3 border-b pb-2">步驟二：完成挑戰</h2>
+            
+            <!-- 成語解釋區塊 (新增) -->
+            <div class="bg-blue-50 p-4 rounded-lg shadow-inner border-l-4 border-blue-500">
+                <p id="current-lesson" class="text-lg font-medium text-red-700 mb-2"></p>
+                <p class="text-md text-blue-800 leading-relaxed">
+                    <span class="font-bold text-blue-600 mr-2">💡 解釋：</span>
+                    <span id="idiom-explanation" class="font-normal italic"></span>
+                </p>
             </div>
             
-            <!-- 題目說明 -->
-            <p class="text-center text-gray-700 mb-2">請點選下方的詞語，將其組合成正確的例句：</p>
-
-            <!-- 答案區 -->
-            <div id="answer-area" class="w-full min-h-[6rem] bg-white border-2 border-dashed border-gray-400 rounded-lg p-3 flex flex-wrap gap-2 items-center justify-center transition-all">
-                <span class="text-gray-400">請將詞語排入此處</span>
+            <!-- 造句區塊 (更新) -->
+            <div class="bg-red-50 p-4 rounded-lg shadow-inner">
+                <p class="text-2xl text-gray-800 leading-relaxed tracking-wider">
+                    <span class="font-bold text-red-500 mr-2">造句：</span>
+                    <span id="question-sentence" class="font-normal"></span>
+                </p>
             </div>
 
-            <!-- 清除按鈕 -->
-            <button id="clear-btn" class="w-full bg-gray-300 hover:bg-gray-400 text-black font-medium py-2 px-4 rounded-lg transition duration-200 mt-3">
-                清除重排
-            </button>
-
-            <!-- 詞語選擇區 -->
-            <div id="shuffled-words-area" class="w-full min-h-[6rem] bg-blue-50 border-t border-b border-gray-200 mt-4 p-3 flex flex-wrap gap-3 items-center justify-center">
-                <!-- 詞語按鈕會動態生成於此 -->
+            <div id="feedback-area" class="min-h-[6rem] flex flex-col items-center justify-center">
+                <!-- Feedback/Success message goes here -->
+                <p id="message" class="text-xl font-bold text-gray-600">請從下方選項選出正確成語。</p>
             </div>
-
-            <!-- 送出按鈕 -->
-            <button id="submit-btn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg shadow-md transition duration-200 mt-4 text-lg">
-                送出答案
-            </button>
-
-            <!-- 3. 回饋區 -->
-            <div id="feedback-area" class="mt-4 p-4 rounded-lg" hidden>
-                <h3 id="feedback-title" class="text-2xl font-bold mb-2"></h3>
-                <p id="feedback-correct-answer" class="text-lg"></p>
-                <button id="next-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-200 mt-4 text-lg">
-                    下一題
+            
+            <!-- 語音按鈕 -->
+            <div id="speech-controls" class="w-full text-center hidden">
+                <button id="speak-button" class="bg-yellow-500 text-white font-bold py-2 px-4 rounded-full shadow-lg hover:bg-yellow-600 transition-colors flex items-center justify-center mx-auto" onclick="speakIdiom()">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 3v14a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 00.09-.217zM14.546 12.441a5.986 5.986 0 000-4.882 1 1 0 011.892.61c.142.66.216 1.334.216 2.015s-.074 1.355-.216 2.015a1 1 0 01-1.892.61z" clip-rule="evenodd" />
+                    </svg>
+                    朗讀成語
                 </button>
+                <p class="text-sm text-gray-500 mt-1">（使用瀏覽器內建語音）</p>
             </div>
+
+
+            <div id="options-area" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button class="option-button bg-red-500 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed" onclick="checkAnswer(this)" data-answer=""></button>
+                <button class="option-button bg-red-500 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed" onclick="checkAnswer(this)" data-answer=""></button>
+                <button class="option-button bg-red-500 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed" onclick="checkAnswer(this)" data-answer=""></button>
+            </div>
+
+            <button id="next-button" class="w-full bg-green-500 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-green-600 transition-colors hidden disabled:opacity-50" onclick="nextQuestion()">下一題挑戰</button>
         </div>
-
-        <!-- 4. 結果畫面 -->
-        <div id="results-screen" class="text-center" hidden>
-            <h2 id="results-title" class="text-3xl font-bold text-blue-800 mb-4"></h2>
-            <p id="results-message" class="text-lg text-gray-700 mb-6"></p>
-
-            <div class="space-y-3">
-                <button id="practice-missed-btn" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-lg shadow-md transition duration-200 text-lg" hidden>
-                    練習錯誤的題目
-                </button>
-                <button id="start-over-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition duration-200 text-lg">
-                    重新開始
-                </button>
-            </div>
-        </div>
-
     </div>
 
     <script>
-        // --- 資料庫 ---
-        // 根據上傳的 doc 檔案解析出的資料
-        const allData = [
-            {
-                lesson: "L01",
-                title: "第一課：我的心情",
-                phrases: [
-                    {
-                        id: "L01-P1",
-                        original: "害怕的時候",
-                        structure: "形容詞（心情）＋的＋時候",
-                        examples: [
-                            { full: "快樂的時候", chunks: ["快樂", "的", "時候"] },
-                            { full: "緊張的時候", chunks: ["緊張", "的", "時候"] },
-                            { full: "生氣的時候", chunks: ["生氣", "的", "時候"] },
-                            { full: "難過的時候", chunks: ["難過", "的", "時候"] }
-                        ]
-                    },
-                    {
-                        id: "L01-P2",
-                        original: "我好想躲起來",
-                        structure: "名詞（誰）＋好想＋動詞（做什麼事）",
-                        examples: [
-                            { full: "弟弟好想去運動", chunks: ["弟弟", "好想", "去運動"] },
-                            { full: "妹妹好想吃點心", chunks: ["妹妹", "好想", "吃點心"] },
-                            { full: "我好想去公園玩", chunks: ["我", "好想", "去公園玩"] },
-                            { full: "哥哥好想看電視", chunks: ["哥哥", "好想", "看電視"] }
-                        ]
-                    }
-                ]
-            },
-            {
-                lesson: "L02",
-                title: "第二課：彩色的天空",
-                phrases: [
-                    {
-                        id: "L02-P1",
-                        original: "快樂得跳起舞來",
-                        structure: "形容詞（心情）＋得＋動詞（做什麼事）",
-                        examples: [
-                            { full: "高興得唱起歌來", chunks: ["高興", "得", "唱起歌來"] },
-                            { full: "難過得流下淚來", chunks: ["難過", "得", "流下淚來"] },
-                            { full: "生氣得用力跺腳", chunks: ["生氣", "得", "用力跺腳"] },
-                            { full: "開心得拍著手", chunks: ["開心", "得", "拍著手"] }
-                        ]
-                    }
-                ]
-            },
-            {
-                lesson: "L03",
-                title: "第三課：國王做新衣",
-                phrases: [
-                    {
-                        id: "L03-P1",
-                        original: "越做越高興",
-                        structure: "越＋動詞（動作）＋越＋副詞（怎麼樣）",
-                        examples: [
-                            { full: "越想越生氣", chunks: ["越想", "越生氣"] },
-                            { full: "越說越興奮", chunks: ["越說", "越興奮"] },
-                            { full: "越跑越快", chunks: ["越跑", "越快"] },
-                            { full: "越吃越開心", chunks: ["越吃", "越開心"] }
-                        ]
-                    },
-                    {
-                        id: "L03-P2",
-                        original: "國王喜歡穿新衣",
-                        structure: "名詞（誰）＋喜歡＋動詞（做什麼事）",
-                        examples: [
-                            { full: "媽媽喜歡吃美食", chunks: ["媽媽", "喜歡", "吃美食"] },
-                            { full: "哥哥喜歡打籃球", chunks: ["哥哥", "喜歡", "打籃球"] },
-                            { full: "妹妹喜歡畫圖", chunks: ["妹妹", "喜歡", "畫圖"] },
-                            { full: "弟弟喜歡玩積木", chunks: ["弟弟", "喜歡", "玩積木"] }
-                        ]
-                    }
-                ]
-            },
-            {
-                lesson: "L04",
-                title: "第四課：水草下的呱呱",
-                phrases: [
-                    {
-                        id: "L04-P1",
-                        original: "只聞聲不見影",
-                        structure: "只＋動詞（動作）＋不＋動詞（動作）",
-                        examples: [
-                            { full: "只吃飯不喝湯", chunks: ["只吃飯", "不喝湯"] },
-                            { full: "只看書不寫字", chunks: ["只看書", "不寫字"] },
-                            { full: "只聽音樂不唱歌", chunks: ["只聽音樂", "不唱歌"] },
-                            { full: "只畫圖不上色", chunks: ["只畫圖", "不上色"] }
-                        ]
-                    },
-                    {
-                        id: "L04-P2",
-                        original: "不只想看，還想要抓",
-                        structure: "不只＋動詞（第一件事），還＋動詞（第二件事）",
-                        examples: [
-                            { full: "不只想打籃球，還想要參加比賽", chunks: ["不只想打籃球", "，", "還想要參加比賽"] },
-                            { full: "不只會游泳，還會做體操", chunks: ["不只會游泳", "，", "還會做體操"] },
-                            { full: "不只想聽故事，還想要看圖畫", chunks: ["不只想聽故事", "，", "還想要看圖畫"] }
-                        ]
-                    }
-                ]
-            },
-            {
-                lesson: "L05",
-                title: "第五課：沙灘上的畫",
-                phrases: [
-                    {
-                        id: "L05-P1",
-                        original: "爬進爬出",
-                        structure: "動詞（相反的兩個動作）",
-                        examples: [
-                            { full: "轉來轉去", chunks: ["轉來", "轉去"] },
-                            { full: "飛上飛下", chunks: ["飛上", "飛下"] },
-                            { full: "跑進跑出", chunks: ["跑進", "跑出"] },
-                            { full: "走來走去", chunks: ["走來", "走去"] }
-                        ]
-                    },
-                    {
-                        id: "L05-P2",
-                        original: "大大小小的腳印",
-                        structure: "疊字形容詞（怎麼樣）＋的＋名詞（什麼事物）",
-                        examples: [
-                            { full: "彎彎曲曲的山路", chunks: ["彎彎曲曲", "的", "山路"] },
-                            { full: "冰冰涼涼的果汁", chunks: ["冰冰涼涼", "的", "果汁"] },
-                            { full: "高高低低的房子", chunks: ["高高低低", "的", "房子"] },
-                            { full: "快快樂樂的小孩", chunks: ["快快樂樂", "的", "小孩"] }
-                        ]
-                    },
-                    {
-                        id: "L05-P3",
-                        original: "海水退得好遠好遠",
-                        structure: "名詞（人或物）＋動詞（動作）＋得＋好＋副詞（怎麼樣）＋好＋副詞（怎麼樣）",
-                        examples: [
-                            { full: "弟弟跑得好快好快", chunks: ["弟弟", "跑得", "好快好快"] },
-                            { full: "老鷹飛得好高好高", chunks: ["老鷹", "飛得", "好高好高"] },
-                            { full: "妹妹笑得好甜好甜", chunks: ["妹妹", "笑得", "好甜好甜"] }
-                        ]
-                    }
-                ]
-            },
-            {
-                lesson: "L06",
-                title: "第六課：草叢裡的星星",
-                phrases: [
-                    {
-                        id: "L06-P1",
-                        original: "一朵又一朵發光的雲",
-                        structure: "一＋量詞＋又＋一＋量詞＋形容詞（怎麼樣）＋的＋名詞（什麼事物）",
-                        examples: [
-                            { full: "一棵又一棵高大的樹木", chunks: ["一棵", "又", "一棵", "高大的", "樹木"] },
-                            { full: "一本又一本好看的故事書", chunks: ["一本", "又", "一本", "好看的", "故事書"] },
-                            { full: "一隻又一隻可愛的小狗", chunks: ["一隻", "又", "一隻", "可愛的", "小狗"] }
-                        ]
-                    },
-                     {
-                        id: "L06-P2",
-                        original: "竹林盡頭是小溪",
-                        structure: "名詞（地方）＋名詞（什麼位置）＋是＋名詞（什麼事物）",
-                        examples: [
-                            { full: "公園旁邊是市場", chunks: ["公園旁邊", "是", "市場"] },
-                            { full: "鐵軌附近是農田", chunks: ["鐵軌附近", "是", "農田"] },
-                            { full: "學校對面是郵局", chunks: ["學校對面", "是", "郵局"] }
-                        ]
-                    }
-                ]
-            },
-            {
-                lesson: "L07",
-                title: "第七課：不一樣的美食",
-                phrases: [
-                    {
-                        id: "L07-P1",
-                        original: "教大家做越南春捲",
-                        structure: "教＋名詞（人或物）＋動詞（做什麼事）",
-                        examples: [
-                            { full: "教外婆玩桌遊", chunks: ["教", "外婆", "玩桌遊"] },
-                            { full: "教妹妹打籃球", chunks: ["教", "妹妹", "打籃球"] },
-                            { full: "教弟弟寫功課", chunks: ["教", "弟弟", "寫功課"] },
-                            { full: "教同學唱歌", chunks: ["教", "同學", "唱歌"] }
-                        ]
-                    },
-                    {
-                        id: "L07-P2",
-                        original: "你怎麼帶竹筒來？",
-                        structure: "名詞（人或物）＋怎麼＋動詞（做什麼事）？",
-                        examples: [
-                            { full: "哥哥怎麼還沒來？", chunks: ["哥哥", "怎麼", "還沒來？"] },
-                            { full: "小貓怎麼跑走了？", chunks: ["小貓", "怎麼", "跑走了？"] },
-                            { full: "你怎麼哭了？", chunks: ["你", "怎麼", "哭了？"] }
-                        ]
-                    }
-                ]
-            },
-            {
-                lesson: "L08",
-                title: "第八課：美食分享日",
-                phrases: [
-                    {
-                        id: "L08-P1",
-                        original: "搶著舉手",
-                        structure: "動詞（動作）＋著＋動詞（做什麼事）",
-                        examples: [
-                            { full: "坐著看書", chunks: ["坐著", "看書"] },
-                            { full: "跪著擦地板", chunks: ["跪著", "擦地板"] },
-                            { full: "躺著睡覺", chunks: ["躺著", "睡覺"] },
-                            { full: "笑著說話", chunks: ["笑著", "說話"] }
-                        ]
-                    }
-                ]
-            },
-            {
-                lesson: "L09",
-                title: "第九課：好味道",
-                phrases: [
-                    {
-                        id: "L09-P1",
-                        original: "淡淡的香氣",
-                        structure: "疊字形容詞＋的＋名詞（什麼事物）",
-                        examples: [
-                            { full: "香香的麵包", chunks: ["香香", "的", "麵包"] },
-                            { full: "硬硬的石頭", chunks: ["硬硬", "的", "石頭"] },
-                            { full: "紅紅的蘋果", chunks: ["紅紅", "的", "蘋果"] },
-                            { full: "高高的樹", chunks: ["高高", "的", "樹"] }
-                        ]
-                    },
-                    {
-                        id: "L09-P2",
-                        original: "我來點點名",
-                        structure: "名詞（人或物）＋來＋疊字動詞＋名詞（什麼事物）",
-                        examples: [
-                            { full: "小鴨來玩玩水", chunks: ["小鴨", "來", "玩玩水"] },
-                            { full: "妹妹來唱唱歌", chunks: ["妹妹", "來", "唱唱歌"] },
-                            { full: "大家來拍拍手", chunks: ["大家", "來", "拍拍手"] },
-                            { full: "我們來跳跳舞", chunks: ["我們", "來", "跳跳舞"] }
-                        ]
-                    }
-                ]
-            },
-            {
-                lesson: "L10",
-                title: "第十課：加加減減",
-                phrases: [
-                    {
-                        id: "L10-P1",
-                        original: "想也不想",
-                        structure: "動詞（動作）＋也＋不＋動詞（動作）",
-                        examples: [
-                            { full: "聽也不聽", chunks: ["聽", "也", "不", "聽"] },
-                            { full: "找也不找", chunks: ["找", "也", "不", "找"] },
-                            { full: "看也不看", chunks: ["看", "也", "不", "看"] },
-                            { full: "問也不問", chunks: ["問", "也", "不", "問"] }
-                        ]
-                    }
-                ]
-            },
-            {
-                lesson: "L11",
-                title: "第十一課：奇怪的門",
-                phrases: [
-                    {
-                        id: "L11-P1",
-                        original: "闖來闖去闖不出來",
-                        structure: "動詞（動作）＋來＋動詞（動作）＋去＋動詞（動作）＋不出來",
-                        examples: [
-                            { full: "跑來跑去跑不出來", chunks: ["跑來跑去", "跑不出來"] },
-                            { full: "想來想去想不出來", chunks: ["想來想去", "想不出來"] },
-                            { full: "繞來繞去繞不出來", chunks: ["繞來繞去", "繞不出來"] }
-                        ]
-                    }
-                ]
-            },
-            {
-                lesson: "L12",
-                title: "第十二課：詠鵝",
-                phrases: [
-                    {
-                        id: "L12-P1",
-                        original: "輕輕撥著水",
-                        structure: "疊字副詞＋動詞（動作）＋著＋名詞（什麼事物）",
-                        examples: [
-                            { full: "慢慢喝著湯", chunks: ["慢慢", "喝著", "湯"] },
-                            { full: "重重打著鼓", chunks: ["重重", "打著", "鼓"] },
-                            { full: "靜靜看著書", chunks: ["靜靜", "看著", "書"] }
-                        ]
-                    },
-                    {
-                        id: "L12-P2",
-                        original: "白鵝身體浮在水面上",
-                        structure: "名詞（人或物）＋動詞（動作）＋在＋名詞（什麼地方）",
-                        examples: [
-                            { full: "雙腳泡在溪水中", chunks: ["雙腳", "泡在", "溪水中"] },
-                            { full: "奶奶走在人行道上", chunks: ["奶奶", "走在", "人行道上"] },
-                            { full: "小鳥停在樹枝上", chunks: ["小鳥", "停在", "樹枝上"] }
-                        ]
-                    },
-                    {
-                        id: "L12-P3",
-                        original: "姐姐變成小詩人了！",
-                        structure: "名詞（誰）＋變成＋名詞（什麼身分）！",
-                        examples: [
-                            { full: "哥哥變成小畫家了！", chunks: ["哥哥", "變成", "小畫家了！"] },
-                            { full: "媽媽變成大廚師了！", chunks: ["媽媽", "變成", "大廚師了！"] },
-                            { full: "弟弟變成太空人了！", chunks: ["弟弟", "變成", "太空人了！"] }
-                        ]
-                    }
-                ]
-            }
-        ];
+        // =========================================================================
+        // 核心資料庫: 1-12 課的成語及其造句與解釋 (已加入解釋)
+        // [成語] 是替換用的 Placeholder
+        // =========================================================================
 
-        // --- DOM 元素 ---
-        const setupScreen = document.getElementById('setup-screen');
-        const practiceScreen = document.getElementById('practice-screen');
-        const resultsScreen = document.getElementById('results-screen');
+        const idiomData = {
+            "第一課 我的心情": [
+                { idiom: "難能可貴", explanation: "做到了不容易做到的事，所以特別珍貴。", sentence: "他小小年紀就懂得幫忙做家事，真是[成語]。" },
+                { idiom: "愛屋及烏", explanation: "比喻愛一個人，也連帶關愛和他有關係的所有事。", sentence: "我喜歡和他一起玩，[成語]，也喜歡和他的妹妹一起玩。" },
+                { idiom: "行雲流水", explanation: "形容待人處事或文章字畫生動流暢，沒有拘束。", sentence: "這首歌的節奏自然順暢，有如[成語]，大家都喜歡聽。" },
+                { idiom: "開誠布公", explanation: "坦白、誠懇的說出自己的意見。", sentence: "我希望你們[成語]的說一說，來化解彼此的誤會。" },
+                { idiom: "心花怒放", explanation: "形容心裡非常高興、快樂。", sentence: "弟弟真誠的讚美，讓媽媽[成語]。" },
+                { idiom: "現身說法", explanation: "以親身經驗為例證，向人講解說明。", sentence: "老師請跳繩得獎的人[成語]，告訴大家練習的好方法。" }
+            ],
+            "第二課 彩色的天空": [
+                { idiom: "老馬識途", explanation: "比喻有經驗的人，可帶領人走上正確的道路。", sentence: "小張常到日本旅遊，這次有他[成語]的帶領下，一定玩得很盡興。" },
+                { idiom: "耳目一新", explanation: "聽到的、看到的都有一種新穎、清爽的感覺。", sentence: "這座兒童樂園經過整修後，讓人感到[成語]。" },
+                { idiom: "守望相助", explanation: "互相照應，共同防範、抵禦，以維護團體或地方的安寧。", sentence: "同學們要[成語]，可以幫助別人，也可以幫助自己。" },
+                { idiom: "有始有終", explanation: "有開頭有結尾。指做事能貫徹到底。", sentence: "班長做事認真負責，總是能[成語]的完成，我要向他學習。" },
+                { idiom: "不知所措", explanation: "形容不知道怎麼辦才好。", sentence: "遇到地震要保持冷靜，才不會[成語]。" },
+                { idiom: "志同道合", explanation: "志向相同，意見相合。", sentence: "多參加各種活動，就可以找到[成語]的朋友。" }
+            ],
+            "第三課 國王做新衣": [
+                { idiom: "畫龍點睛", explanation: "比喻繪畫、作文、講話在關鍵處加上精采的一筆，使內容生動。", sentence: "這幅畫有了他[成語]的一筆，看起來更漂亮了！" },
+                { idiom: "改頭換面", explanation: "徹底改變外觀，有重新做人的意思。", sentence: "他已經[成語]，努力做好事，我們應該給他鼓勵和機會。" },
+                { idiom: "千方百計", explanation: "想盡或用盡一切方法。", sentence: "為了解決眼前的難題，我們用盡了[成語]，希望最後可以成功。" },
+                { idiom: "百發百中", explanation: "形容射箭或射擊非常準確，每發必中。", sentence: "只見他反身跳投，又進了，真是[成語]！" },
+                { idiom: "約法三章", explanation: "事先約定幾條主要的規定，大家共同遵守。", sentence: "我和媽媽[成語]，在公園玩到五點就會回家。" },
+                { idiom: "四分五裂", explanation: "形容分散、不完整，支離破碎。", sentence: "小組因為意見不同吵了起來，變得[成語]。" }
+            ],
+            "第四課 水草下的呱呱": [
+                { idiom: "有聲有色", explanation: "形容敘述、表演生動逼真，內容精采。", sentence: "他們把故事說得[成語]，大家聽完都為他們鼓掌。" },
+                { idiom: "形影不離", explanation: "形容關係親密，無時無刻不在一起。", sentence: "姐姐和她的好朋友總是[成語]，像是親姐妹一樣。" },
+                { idiom: "別開生面", explanation: "另創一種新局面、新風格。", sentence: "這場[成語]的棒球音樂會，有精彩的歌曲和表演，讓大家跟著音樂又唱又跳。" },
+                { idiom: "易如反掌", explanation: "比喻事情非常容易，毫不費力。", sentence: "他的力氣很大，抬起書櫃是[成語]的事。" },
+                { idiom: "明知故犯", explanation: "明明知道不對或不能做，卻故意去做。", sentence: "弟弟[成語]，又做錯事了，讓媽媽不知道該拿他怎麼辦?" },
+                { idiom: "一成不變", explanation: "一點也沒有改變。", sentence: "爸爸做事有個[成語]的原則，就是認真負責。" }
+            ],
+            "第五課 沙灘上的畫": [
+                { idiom: "聚沙成塔", explanation: "比喻積少成多。", sentence: "只要我們努力，[成語]，成功就在眼前。" },
+                { idiom: "天涯海角", explanation: "形容極遠的地方。", sentence: "有了手機，就算[成語]，我們都能聯絡對方。" },
+                { idiom: "知難而退", explanation: "知道事情困難就退縮，沒有勇氣面對。", sentence: "他分享自己成功的方法，就是要努力向前，不能有[成語]的想法。" },
+                { idiom: "一朝一夕", explanation: "形容很短暫的時間。", sentence: "畫圖要畫得好，不是[成語]就能達成，要經過長時間的練習。" },
+                { idiom: "腳踏實地", explanation: "比喻做事認真、實在。", sentence: "他透過[成語]的練習，才贏得比賽。" }
+            ],
+            "第六課 草叢裡的星星": [
+                { idiom: "粗茶淡飯", explanation: "指簡單的飯食。", sentence: "鄰居的老夫婦每天都是[成語]，過著簡單的生活。" },
+                { idiom: "胸有成竹", explanation: "比喻事先已有了準備或計劃。", sentence: "哥哥[成語]的去比賽，果然拿回好成績。" },
+                { idiom: "頭頭是道", explanation: "形容說話有條理，脈絡清楚。", sentence: "他講得[成語]，最後大家都同意採用他的意見。" },
+                { idiom: "袖手旁觀", explanation: "比喻置身事外，不予過問或幫助。", sentence: "大家忙成一團，她卻沒事情做，[成語]的站在那裡。" },
+                { idiom: "目不轉睛", explanation: "形容注目凝視，專心觀看。", sentence: "看著廣場上奇幻的魔術表演，遊客們[成語]，就怕錯過精彩的演出。" }
+            ],
+            "第七課 不一樣的美食": [
+                { idiom: "裝模作樣", explanation: "故意做出某種姿態，以引人注意或炫耀自己。", sentence: "他[成語]的道歉，很難讓人原諒他。" },
+                { idiom: "生龍活虎", explanation: "形容活潑矯健，充滿活力。", sentence: "球場上的同學們，個個[成語]，非常有活力的樣子。" },
+                { idiom: "出奇制勝", explanation: "用奇特的辦法取得勝利。", sentence: "這次球賽，教練的戰略[成語]，我們終於贏得冠軍。" },
+                { idiom: "節外生枝", explanation: "比喻在主要問題之外，又發生了新的問題。", sentence: "這消息越多人知道，越會[成語]。" },
+                { idiom: "風平浪靜", explanation: "形容沒有風浪，水面平靜。", sentence: "這件事總算[成語]的過去了。" },
+                { idiom: "安分守己", explanation: "守住本分，不做違法亂紀的事。", sentence: "他經過這次可怕的事件，終於知道[成語]了。" }
+            ],
+            "第八課 美食分享日": [
+                { idiom: "得意忘形", explanation: "形容高興得失去常態，舉止輕狂。", sentence: "弟弟剛學會騎腳踏車就[成語]的放開把手，差點摔倒。" },
+                { idiom: "紙上談兵", explanation: "比喻不切實際的空談。", sentence: "這些想法都只是[成語]，我們還是要動手做以後，才能發現問題。" },
+                { idiom: "千變萬化", explanation: "形容變化極多。", sentence: "這裡施放的煙火，花樣[成語]，看起來真是美麗!" },
+                { idiom: "各有千秋", explanation: "比喻各有長處，不分高下。", sentence: "這兩名選手的跳水動作[成語]，裁判很難決定冠軍。" },
+                { idiom: "移花接木", explanation: "比喻暗中更換事物，欺騙他人。", sentence: "王先生買的上等櫻桃，不知什麼時候被[成語]，變成葡萄了!" },
+                { idiom: "言聽計從", explanation: "形容對某人非常信任，完全聽從他的話。", sentence: "李經理很信任他的助理，對他總是[成語]。" }
+            ],
+            "第九課 好味道": [
+                { idiom: "古道熱腸", explanation: "形容待人誠懇、熱心。", sentence: "黃里長總是那麼[成語]，待人誠懇又熱心。" },
+                { idiom: "水深火熱", explanation: "比喻生活極端困苦。", sentence: "戰亂中的國家，人民通常都過著[成語]的日子。" },
+                { idiom: "蒸蒸日上", explanation: "形容事業不斷向上發展。", sentence: "在他的努力經營下，公司業績[成語]。" },
+                { idiom: "名不虛傳", explanation: "名聲與實際相符，一點也沒有誇大。", sentence: "親眼看到陽明山百花齊開的景色，果然[成語]啊!" },
+                { idiom: "四通八達", explanation: "形容交通便利。", sentence: "這裡的交通[成語]，要到各個景點都很方便。" },
+                { idiom: "細水長流", explanation: "比喻節省、積蓄，可長久使用。", sentence: "每日存下一點小錢，[成語]，也會累積成一筆財富。" }
+            ],
+            "第十課 加加減減": [
+                { idiom: "虛有其表", explanation: "空有華麗的外表，內在卻很空虛。", sentence: "別看他說得頭頭是道，其實什麼也不懂，只是[成語]罷了。" },
+                { idiom: "對答如流", explanation: "形容回答問題流暢、快速。", sentence: "小明對老師的提問，總是[成語]，真厲害。" },
+                { idiom: "七嘴八舌", explanation: "形容人多嘴雜，議論紛紛。", sentence: "今天班會討論慶生會的活動，同學們[成語]的爭相提出意見。" },
+                { idiom: "異想天開", explanation: "不符實際、不合事理的奇特想法。", sentence: "因為萊特兄弟的[成語]，最後竟然實現了人類飛行的美夢。" },
+                { idiom: "守口如瓶", explanation: "嘴像瓶口一樣封得嚴緊，比喻嚴守祕密。", sentence: "媽媽[成語]，一直不告訴我生日禮物是什麼。" },
+                { idiom: "對牛彈琴", explanation: "比喻對不懂道理的人講道理，白費口舌。", sentence: "跟他講道理，就像[成語]，還是別浪費時間吧!" }
+            ],
+            "第十一課 奇怪的門": [
+                { idiom: "少見多怪", explanation: "很少見到就覺得奇怪。", sentence: "這種事經常發生，沒什麼稀奇，你就別[成語]了。" },
+                { idiom: "坐立不安", explanation: "形容心情緊張，坐著站著都不安寧。", sentence: "等一下就要公布得獎名單了，大家都開始[成語]。" },
+                { idiom: "天馬行空", explanation: "比喻文章、書法、言語、想像等氣勢豪邁，不受拘束。", sentence: "這本故事書的情節，充滿[成語]的想像，吸引我一直讀下去。" },
+                { idiom: "交頭接耳", explanation: "形容兩個人湊近低聲說話。", sentence: "上課時要專心聽講，不要[成語]。" },
+                { idiom: "力不從心", explanation: "心裡想做，力量卻辦不到。", sentence: "如果做事常常失敗，就會有[成語]的感覺。" },
+                { idiom: "海底撈針", explanation: "比喻極難找到或極難辦到。", sentence: "如果不知道他的地址，要找到他，就像[成語]一樣困難。" }
+            ],
+            "第十二課 詠鵝": [
+                { idiom: "千里鵝毛", explanation: "比喻禮物雖輕，但情意真摯。", sentence: "這份禮物雖然不貴重，卻是我[成語]的心意，請你一定要收下。" },
+                { idiom: "一波三折", explanation: "比喻事情進行中遇到許多曲折。", sentence: "故事裡的英雄經過[成語]之後，終於打敗壞人救了大家。" },
+                { idiom: "一鼓作氣", explanation: "形容鼓足勇氣，一口氣把事情做完。", sentence: "工作只剩下一點點了，我們[成語]把這些事做完再休息。" },
+                { idiom: "首屈一指", explanation: "比喻最突出、最優秀。", sentence: "小彩是班上[成語]的熱心同學，常常主動幫助別人。" },
+                { idiom: "身體力行", explanation: "親自體驗，努力實行。", sentence: "他聽了保護地球的故事之後，決定[成語]，從隨手關燈做起。" },
+                { idiom: "形單影隻", explanation: "形容孤單無依。", sentence: "湖面上的天鵝獨來獨往，[成語]的，讓人覺得難過。" }
+            ]
+        };
 
-        const lessonSelect = document.getElementById('lesson-select');
-        const phraseSelect = document.getElementById('phrase-select');
-        const countSelect = document.getElementById('count-select');
-        const startBtn = document.getElementById('start-btn');
-
-        const phraseTitle = document.getElementById('phrase-title');
-        const questionCounter = document.getElementById('question-counter');
-        const phraseStructure = document.getElementById('phrase-structure');
-        const answerArea = document.getElementById('answer-area');
-        const clearBtn = document.getElementById('clear-btn');
-        const shuffledWordsArea = document.getElementById('shuffled-words-area');
-        const submitBtn = document.getElementById('submit-btn');
-
-        const feedbackArea = document.getElementById('feedback-area');
-        const feedbackTitle = document.getElementById('feedback-title');
-        const feedbackCorrectAnswer = document.getElementById('feedback-correct-answer');
-        const nextBtn = document.getElementById('next-btn');
-
-        const resultsTitle = document.getElementById('results-title');
-        const resultsMessage = document.getElementById('results-message');
-        const practiceMissedBtn = document.getElementById('practice-missed-btn');
-        const startOverBtn = document.getElementById('start-over-btn');
-
-        // --- 語音 ---
+        // =========================================================================
+        // 遊戲狀態與工具函數
+        // =========================================================================
+        let currentLesson = null;
+        let lessonIdioms = [];
+        let currentQuestion = null;
+        let allIdioms = Object.values(idiomData).flat().map(item => item.idiom);
+        
+        // 語音相關變數
         const synth = window.speechSynthesis;
-        let voices = [];
+        let chineseVoice = null; 
 
-        function loadVoices() {
-            voices = synth.getVoices().filter(voice => voice.lang.includes('zh-TW'));
-            if (voices.length === 0) {
-                voices = synth.getVoices().filter(voice => voice.lang.includes('zh'));
-            }
-        }
-        // 瀏覽器可能需要一點時間來載入語音
-        if (synth.onvoiceschanged !== undefined) {
-            synth.onvoiceschanged = loadVoices;
-        }
-        loadVoices(); // 立即嘗試載入
-
-        // --- 應用程式狀態 ---
-        let currentPhraseData = null;
-        let currentPracticeSet = [];
-        let currentQuestionIndex = 0;
-        let missedQuestions = [];
-        let answerChunks = []; // 用來存放已點選的答案詞語按鈕
-
-        // --- 函式 ---
-
-        /** 初始化 App */
-        function init() {
-            populateLessonSelect();
-            lessonSelect.addEventListener('change', onLessonChange);
-            phraseSelect.addEventListener('change', onPhraseChange);
-            startBtn.addEventListener('click', startPractice);
-            clearBtn.addEventListener('click', clearAnswer);
-            submitBtn.addEventListener('click', checkAnswer);
-            nextBtn.addEventListener('click', nextQuestion);
-            practiceMissedBtn.addEventListener('click', practiceMissed);
-            startOverBtn.addEventListener('click', resetApp);
-        }
-
-        /** 填入課文選單 */
-        function populateLessonSelect() {
-            lessonSelect.innerHTML = '<option value="">請選擇一課...</option>';
-            allData.forEach(lesson => {
-                const option = document.createElement('option');
-                option.value = lesson.lesson;
-                option.textContent = lesson.title;
-                lessonSelect.appendChild(option);
-            });
-        }
-
-        /** 課文選單變更時，填入短語選單 */
-        function onLessonChange() {
-            const lessonId = lessonSelect.value;
-            phraseSelect.innerHTML = '<option value="">請先選擇課文...</option>';
-            phraseSelect.disabled = true;
-            startBtn.disabled = true;
-
-            if (lessonId) {
-                const lesson = allData.find(l => l.lesson === lessonId);
-                if (lesson) {
-                    phraseSelect.innerHTML = '<option value="">請選擇短語...</option>';
-                    lesson.phrases.forEach(phrase => {
-                        const option = document.createElement('option');
-                        option.value = phrase.id;
-                        option.textContent = phrase.original;
-                        phraseSelect.appendChild(option);
-                    });
-                    phraseSelect.disabled = false;
-                }
-            }
-        }
-
-        /** 短語選單變更時，啟用開始按鈕 */
-        function onPhraseChange() {
-            if (phraseSelect.value) {
-                startBtn.disabled = false;
-            } else {
-                startBtn.disabled = true;
-            }
-        }
-
-        /**
-         * Fisher-Yates (aka Knuth) Shuffle
-         * https://stackoverflow.com/a/2450976/1263406
-         */
-        function shuffle(array) {
-            let currentIndex = array.length,  randomIndex;
-            // While there remain elements to shuffle.
-            while (currentIndex != 0) {
-                // Pick a remaining element.
-                randomIndex = Math.floor(Math.random() * currentIndex);
-                currentIndex--;
-                // And swap it with the current element.
-                [array[currentIndex], array[randomIndex]] = [
-                array[randomIndex], array[currentIndex]];
+        // 隨機工具函數
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
             }
             return array;
         }
 
-        /** 開始練習 */
-        function startPractice() {
-            const lessonId = lessonSelect.value;
-            const phraseId = phraseSelect.value;
-            const count = parseInt(countSelect.value, 10);
-            
-            const lesson = allData.find(l => l.lesson === lessonId);
-            currentPhraseData = lesson.phrases.find(p => p.id === phraseId);
-
-            // 隨機選取例句
-            let availableExamples = [...currentPhraseData.examples];
-            // 確保題數不超過總例句數
-            const numQuestions = Math.min(count, availableExamples.length);
-            // 如果請求的題數多於可用題數，且總例句數少於5，就重複使用例句
-            if (count > availableExamples.length && availableExamples.length < 5) {
-                 while (availableExamples.length < count) {
-                    availableExamples.push(...currentPhraseData.examples);
-                }
-            }
-            
-            currentPracticeSet = shuffle(availableExamples).slice(0, count);
-            currentQuestionIndex = 0;
-            missedQuestions = [];
-
-            showScreen('practice');
-            showQuestion();
+        // 從陣列中隨機取出 n 個不重複的元素
+        function getRandomElements(arr, n, excludeElement = null) {
+            let tempArr = arr.filter(item => item !== excludeElement);
+            shuffleArray(tempArr);
+            return tempArr.slice(0, n);
         }
 
-        /** 顯示目前題目 */
-        function showQuestion() {
-            if (currentQuestionIndex >= currentPracticeSet.length) {
-                showResults();
+        // 語音初始化：載入中文語音
+        function setupSpeechSynthesis() {
+            if (!('speechSynthesis' in window)) {
+                console.warn('瀏覽器不支援 Web Speech API。');
                 return;
             }
 
-            const example = currentPracticeSet[currentQuestionIndex];
-            
-            phraseTitle.textContent = currentPhraseData.original;
-            questionCounter.textContent = `第 ${currentQuestionIndex + 1} / ${currentPracticeSet.length} 題`;
-            phraseStructure.innerHTML = colorizeStructure(currentPhraseData.structure);
-            
-            generateShuffledWords(example);
-            clearAnswer();
-            
-            feedbackArea.hidden = true;
-            submitBtn.hidden = false;
-            nextBtn.hidden = true;
+            // 嘗試找到一個中文語音
+            function populateVoiceList() {
+                const voices = synth.getVoices();
+                // 優先尋找台灣或普通話的中文語音
+                chineseVoice = voices.find(voice => voice.lang === 'zh-TW' || voice.lang === 'zh-CN' || voice.lang.includes('zh'));
+            }
+
+            // Chrome/Edge 需要等待 voices 載入
+            if (synth.onvoiceschanged !== undefined) {
+                synth.onvoiceschanged = populateVoiceList;
+            }
+            populateVoiceList(); // 立即嘗試載入
         }
 
-        /** 將結構字串上色 */
-        function colorizeStructure(structureStr) {
-            // 詞性
-            let coloredStr = structureStr.replace(
-                /(形容詞|動詞|名詞|副詞|量詞|疊字形容詞)/g,
-                '<span class="text-green-700 font-bold">$1</span>'
-            );
-            // 括號內的類別
-            coloredStr = coloredStr.replace(
-                /（([^）]+)）/g,
-                '<span class="text-blue-600 font-medium">（$1）</span>'
-            );
-            // ＋ 號
-            coloredStr = coloredStr.replace(
-                /＋/g,
-                '<span class="text-red-500 font-bold mx-1">＋</span>'
-            );
-            // ？ 號
-            coloredStr = coloredStr.replace(
-                /？/g,
-                '<span class="text-red-500 font-bold ml-1">？</span>'
-            );
-            return coloredStr;
+        // 朗讀成語 (Web Speech API)
+        window.speakIdiom = function() {
+            if (!currentQuestion || !synth) return;
+
+            // 如果正在朗讀，先取消
+            if (synth.speaking) {
+                 synth.cancel();
+            }
+
+            const idiom = currentQuestion.idiom;
+            const utterance = new SpeechSynthesisUtterance(idiom);
+            
+            // 設定語音，如果找到中文語音則使用，否則使用預設
+            if (chineseVoice) {
+                utterance.voice = chineseVoice;
+            } else {
+                utterance.lang = 'zh-TW'; // 嘗試指定中文
+            }
+            
+            utterance.rate = 0.8; // 讀慢一點
+            utterance.pitch = 1.0;
+
+            synth.speak(utterance);
         }
 
-        /** 生成打散的詞語按鈕 */
-        function generateShuffledWords(example) {
-            shuffledWordsArea.innerHTML = '';
-            const chunks = shuffle([...example.chunks]);
-            
-            chunks.forEach(chunk => {
+
+        // 初始化: 生成課別按鈕
+        function initLessonButtons() {
+            const container = document.getElementById('lesson-buttons');
+            Object.keys(idiomData).forEach(lessonName => {
                 const button = document.createElement('button');
-                button.textContent = chunk;
-                button.className = "bg-white border border-blue-400 text-blue-800 py-2 px-4 rounded-full shadow-sm cursor-pointer hover:bg-blue-100 disabled:opacity-30 disabled:cursor-not-allowed transition duration-150";
-                button.addEventListener('click', () => wordClicked(button));
-                shuffledWordsArea.appendChild(button);
+                button.className = 'bg-blue-500 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-blue-600 transition-colors option-button';
+                button.textContent = lessonName.split(' ')[0]; // 只需要 "第一課", "第二課"
+                button.onclick = () => selectLesson(lessonName);
+                container.appendChild(button);
             });
         }
 
-        /** 點擊詞語按鈕 */
-        function wordClicked(button) {
-            button.disabled = true; // 禁用原按鈕
+        // 選擇課別並開始挑戰
+        function selectLesson(lessonName) {
+            currentLesson = lessonName;
+            lessonIdioms = [...idiomData[lessonName]]; // 複製一份，以便亂序和出題
+            shuffleArray(lessonIdioms);
 
-            // 移除提示文字
-            if (answerArea.children.length === 1 && answerArea.children[0].tagName === 'SPAN') {
-                answerArea.innerHTML = '';
+            document.getElementById('lesson-selection').classList.add('hidden');
+            document.getElementById('challenge-area').classList.remove('hidden');
+            document.getElementById('current-lesson').textContent = `正在挑戰：${lessonName}`;
+
+            nextQuestion();
+        }
+
+        // 載入下一題
+        function nextQuestion() {
+            // 重置介面
+            document.getElementById('idiom-explanation').textContent = ''; // 清空解釋
+            document.getElementById('feedback-area').innerHTML = `<p id="message" class="text-xl font-bold text-gray-600">請從下方選項選出正確成語。</p>`;
+            document.getElementById('next-button').classList.add('hidden');
+            document.getElementById('speech-controls').classList.add('hidden'); // 隱藏語音按鈕
+
+            if (synth && synth.speaking) {
+                 synth.cancel(); // 停止朗讀
             }
 
-            const answerChunk = document.createElement('button');
-            answerChunk.textContent = button.textContent;
-            answerChunk.className = "bg-blue-500 text-white py-2 px-4 rounded-full shadow-sm cursor-pointer hover:bg-red-500 transition duration-150 animate-pop-in";
+
+            if (lessonIdioms.length === 0) {
+                // 所有題目已完成
+                document.getElementById('challenge-area').innerHTML = `
+                    <div class="text-center p-10 bg-yellow-100 rounded-lg">
+                        <p class="text-3xl font-extrabold text-yellow-700 mb-4">🎉 恭喜！完成本課所有挑戰！ 🎉</p>
+                        <button class="bg-red-500 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-red-600 transition-colors mt-4" onclick="window.location.reload()">重新開始 / 選擇其他課別</button>
+                    </div>
+                `;
+                return;
+            }
+
+            // 1. 取得下一題
+            currentQuestion = lessonIdioms.pop();
+            const correctIdiom = currentQuestion.idiom;
             
-            // 點擊答案區的按鈕可以將其移除
-            answerChunk.addEventListener('click', () => {
-                removeWord(answerChunk, button);
-            });
+            // 2. 顯示解釋
+            document.getElementById('idiom-explanation').textContent = currentQuestion.explanation;
 
-            answerArea.appendChild(answerChunk);
-            answerChunks.push(answerChunk);
-        }
-        
-        // 補上 .animate-pop-in 的 CSS 動畫
-        const style = document.createElement('style');
-        style.innerHTML = `
-            @keyframes pop-in {
-                0% { transform: scale(0.5); opacity: 0; }
-                100% { transform: scale(1); opacity: 1; }
-            }
-            .animate-pop-in {
-                animation: pop-in 0.2s ease-out;
-            }
-        `;
-        document.head.appendChild(style);
+            // 3. 替換造句中的方框
+            const questionText = currentQuestion.sentence.replace(
+                '[成語]', 
+                Array(correctIdiom.length).fill('<span class="idiom-box">□</span>').join('')
+            );
+            
+            document.getElementById('question-sentence').innerHTML = questionText;
 
-
-        /** 移除在答案區的詞語 */
-        function removeWord(answerChunk, originalButton) {
-            answerArea.removeChild(answerChunk);
-            answerChunks = answerChunks.filter(chunk => chunk !== answerChunk);
-            originalButton.disabled = false; // 重新啟用原按鈕
-
-            // 如果答案區空了，顯示提示文字
-            if (answerArea.children.length === 0) {
-                answerArea.innerHTML = '<span class="text-gray-400">請將詞語排入此處</span>';
-            }
-        }
-
-        /** 清除答案區 */
-        function clearAnswer() {
-            answerArea.innerHTML = '<span class="text-gray-400">請將詞語排入此處</span>';
-            answerChunks = [];
-            // 啟用所有詞語按鈕
-            Array.from(shuffledWordsArea.children).forEach(button => {
+            // 4. 準備選項
+            const decoys = getRandomElements(allIdioms, 2, correctIdiom);
+            const options = shuffleArray([correctIdiom, ...decoys]);
+            
+            const optionButtons = document.querySelectorAll('#options-area button');
+            optionButtons.forEach((button, index) => {
+                button.textContent = options[index];
+                button.dataset.answer = options[index];
+                button.classList.remove('bg-green-500', 'bg-red-700', 'hidden');
+                button.classList.add('bg-red-500');
                 button.disabled = false;
             });
         }
 
-        /** 檢查答案 */
-        function checkAnswer() {
-            const userAnswer = answerChunks.map(chunk => chunk.textContent).join('');
-            const correctAnswer = currentPracticeSet[currentQuestionIndex].full;
+        // 檢查答案
+        window.checkAnswer = function(selectedButton) {
+            const allButtons = document.querySelectorAll('#options-area button');
+            const selectedAnswer = selectedButton.dataset.answer;
+            const correctAnswer = currentQuestion.idiom;
+            
+            // 禁用所有按鈕
+            allButtons.forEach(btn => btn.disabled = true);
 
-            feedbackArea.hidden = false;
-            submitBtn.hidden = true;
-            nextBtn.hidden = false;
-
-            if (userAnswer === correctAnswer) {
-                feedbackTitle.textContent = "成功！";
-                feedbackArea.className = "mt-4 p-4 rounded-lg bg-green-100 border border-green-400 text-green-800";
-                feedbackCorrectAnswer.textContent = `正確答案：${correctAnswer}`;
-            } else {
-                feedbackTitle.textContent = "失敗！";
-                feedbackArea.className = "mt-4 p-4 rounded-lg bg-red-100 border border-red-400 text-red-800";
-                feedbackCorrectAnswer.textContent = `正確答案：${correctAnswer}`;
+            if (selectedAnswer === correctAnswer) {
+                // 答對邏輯
+                selectedButton.classList.remove('bg-red-500');
+                selectedButton.classList.add('bg-green-500');
                 
-                // 將錯誤題目加入列表
-                if (!missedQuestions.includes(currentPracticeSet[currentQuestionIndex])) {
-                    missedQuestions.push(currentPracticeSet[currentQuestionIndex]);
-                }
-            }
+                // 填入成語並高亮
+                const filledSentence = currentQuestion.sentence.replace(
+                    '[成語]', 
+                    `<span class="idiom-filled">${correctAnswer}</span>`
+                );
+                
+                document.getElementById('question-sentence').innerHTML = filledSentence;
+                document.getElementById('feedback-area').innerHTML = `
+                    <p class="text-2xl font-bold text-green-600">✅ 太棒了！答案正確！</p>
+                    <p class="text-sm text-gray-500 mt-1">正確成語已顯示，您可以點擊下方按鈕朗讀。</p>
+                `;
+                document.getElementById('next-button').classList.remove('hidden');
+                document.getElementById('speech-controls').classList.remove('hidden'); // 顯示語音按鈕
+                
+                // 自動朗讀正確成語
+                speakIdiom();
 
-            // 朗讀正確答案
-            speak(correctAnswer);
-        }
-
-        /** 朗讀文字 */
-        function speak(text) {
-            if (synth.speaking) {
-                synth.cancel();
-            }
-            // 移除問號，避免語音引擎讀出「問號」
-            const textToSpeak = text.replace(/？/g, '');
-            const utterance = new SpeechSynthesisUtterance(textToSpeak);
-            utterance.lang = 'zh-TW';
-            
-            // 嘗試使用台灣中文語音
-            if (voices.length > 0) {
-                utterance.voice = voices[0];
-            }
-            
-            utterance.rate = 0.9;
-            utterance.pitch = 1;
-            synth.speak(utterance);
-        }
-
-        /** 顯示下一題 */
-        function nextQuestion() {
-            currentQuestionIndex++;
-            showQuestion();
-        }
-
-        /** 顯示結果畫面 */
-        function showResults() {
-            showScreen('results');
-            if (missedQuestions.length === 0) {
-                resultsTitle.textContent = "練習完成！";
-                resultsMessage.textContent = "恭喜你全部答對了！";
-                practiceMissedBtn.hidden = true;
             } else {
-                resultsTitle.textContent = "練習完成！";
-                resultsMessage.textContent = `你答錯了 ${missedQuestions.length} 題。`;
-                practiceMissedBtn.hidden = false;
+                // 答錯邏輯
+                selectedButton.classList.remove('bg-red-500');
+                selectedButton.classList.add('bg-red-700');
+                document.getElementById('feedback-area').innerHTML = `
+                    <p class="text-2xl font-bold text-red-700">❌ 答案錯誤，請再試一次。</p>
+                    <button class="bg-gray-400 text-white py-2 px-4 rounded-lg mt-2 hover:bg-gray-500" onclick="resetOptions()">繼續嘗試</button>
+                `;
+                // 讓答錯的選項變透明
+                setTimeout(() => {
+                    selectedButton.classList.add('hidden');
+                }, 500);
             }
         }
 
-        /** 練習錯誤的題目 */
-        function practiceMissed() {
-            currentPracticeSet = [...missedQuestions]; // 只練習錯誤的題目
-            currentQuestionIndex = 0;
-            missedQuestions = []; // 清空錯誤紀錄，準備重新計算
-            showScreen('practice');
-            showQuestion();
+        // 重設選項 (答錯後繼續嘗試)
+        window.resetOptions = function() {
+            const allButtons = document.querySelectorAll('#options-area button');
+            allButtons.forEach(btn => {
+                if (!btn.classList.contains('bg-green-500')) {
+                    btn.disabled = false;
+                }
+                document.getElementById('feedback-area').innerHTML = `<p id="message" class="text-xl font-bold text-gray-600">請從下方選項選出正確成語。</p>`;
+            });
         }
 
-        /** 重置 App 回到設定畫面 */
-        function resetApp() {
-            currentPhraseData = null;
-            currentPracticeSet = [];
-            currentQuestionIndex = 0;
-            missedQuestions = [];
-
-            lessonSelect.value = "";
-            phraseSelect.innerHTML = '<option value="">請先選擇課文...</option>';
-            phraseSelect.disabled = true;
-            startBtn.disabled = true;
-            
-            showScreen('setup');
-        }
-
-        /** 切換畫面 */
-        function showScreen(screenName) {
-            setupScreen.hidden = true;
-            practiceScreen.hidden = true;
-            resultsScreen.hidden = true;
-
-            if (screenName === 'setup') {
-                setupScreen.hidden = false;
-            } else if (screenName === 'practice') {
-                practiceScreen.hidden = false;
-            } else if (screenName === 'results') {
-                resultsScreen.hidden = false;
-            }
-        }
-
-        // --- 啟動 ---
-        document.addEventListener('DOMContentLoaded', init);
-
+        // 初始化整個應用
+        window.onload = function () {
+            initLessonButtons();
+            setupSpeechSynthesis(); // 初始化瀏覽器語音功能
+        };
     </script>
 </body>
 </html>
